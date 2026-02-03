@@ -191,6 +191,10 @@ app.get("/*splat", (req, res) => {
   res.status(404).render("404");
 });
 
+app.all("/*splat", (req, res) => {
+  res.status(404).send("Resource not found.");
+});
+
 app.listen(port, () => {
   console.log("App version 2 listening on port " + port);
 });
