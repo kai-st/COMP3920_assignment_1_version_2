@@ -48,7 +48,7 @@ app.use(
   }),
 );
 
-function createSession(req, username) {
+async function createSession(req, username) {
   req.session.authenticated = true;
   req.session.username = username;
   req.session.cookie.maxAge = expireTime;
@@ -99,7 +99,7 @@ app.post("/signup", async (req, res) => {
   const success = await db_users.createUser({ username, hashedPassword });
 
   if (success) {
-    createSession(req, username);
+    await createSession(req, username);
     res.redirect("/members");
   } else {
     res.redirect("/signup?error=1");
@@ -133,7 +133,7 @@ app.post("/login", async (req, res) => {
   if (results) {
     if (results.length == 1) {
       if (bcrypt.compareSync(password, results[0].password)) {
-        createSession(req, username);
+        await createSession(req, username);
         res.redirect("/members");
         return;
       } else {
