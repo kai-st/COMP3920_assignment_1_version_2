@@ -1,0 +1,12 @@
+button, input {
+    display: block;
+}
+
+button > a {
+    text-decoration: none;
+    color: black;
+}
+
+.alert {
+    color: red;
+}

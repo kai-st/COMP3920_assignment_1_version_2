@@ -1,0 +1,17 @@
+<%- include("header") %> 
+    create user
+    <form action='/signup' method='post'>
+        <input name='username' type='text' placeholder='username'>
+        <% if (missing == 1) { %>
+            <p class="alert">Missing username.</p>
+        <% } %>
+        <input name='password' type='password' placeholder='password'>
+        <% if (missing == 2) { %>
+            <p class="alert">Missing password.</p>
+        <% } %>
+        <button>Submit</button>
+    </form>
+    <% if (error) { %>
+        <p class="alert">Something went wrong. Please try again.</p>
+    <% } %>
+<%- include("footer") %>

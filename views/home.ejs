@@ -1,0 +1,10 @@
+<%- include("header") %> 
+    <% if (username) { %>
+        <p>Hello, <%= username %>!</p>
+        <button><a href="/members">Go to Members Area</a></button>
+        <button><a href="/logout">Logout</a></button>
+    <% } else { %>
+        <button><a href="/signup">Sign up</a></button>
+        <button><a href="/login">Log in</a></button>
+    <% } %> 
+<%- include("footer") %>
