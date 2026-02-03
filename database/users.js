@@ -1,45 +1,52 @@
-const database = require('../databaseConnection');
+const database = require("../databaseConnection");
 
 async function createUser(postData) {
-	let createUserSQL = `
+  let createUserSQL = `
 		INSERT INTO user
 		(username, password)
-		VALUES ('${postData.username}', '${postData.hashedPassword}');
+		VALUES (:user, :passwordHash');
 	`;
-	
-	try {
-		const results = await database.query(createUserSQL);
 
-        console.log("Successfully created user");
-		console.log(results[0]);
-		return true;
-	}
-	catch(err) {
-		console.error("Error inserting user");
-        console.error(err);
-		return false;
-	}
+  const params = {
+    user: postData.username,
+    passwordHash: postData.password,
+  };
+
+  try {
+    const results = await database.query(createUserSQL, params);
+
+    console.log("Successfully created user");
+    console.log(results[0]);
+    return true;
+  } catch (err) {
+    console.error("Error inserting user");
+    console.error(err);
+    return false;
+  }
 }
 
 async function getUser(username) {
-	let getUserSQL = `
+  let getUserSQL = `
 		SELECT username, password
 		FROM user
-		WHERE username = '${username}'
+		WHERE username = :user
 	`;
 
-	try {
-		const results = await database.query(getUserSQL);
+  const params = {
+    user: username,
+  };
 
-        console.log("Successfully found user");
-		console.log(results[0]);
-		return results[0];
-	}
-	catch(err) {
-		console.error("Error trying to find user");
-        console.error(err);
-		return null;
-	}
+  try {
+    const results = await database.query(getUserSQL, params);
+
+    console.log("Successfully found user");
+    console.log(results[0]);
+    return results[0];
+  } catch (err) {
+    console.error("Error trying to find user");
+    console.error(err);
+    return null;
+  }
 }
 
-module.exports = {createUser, getUser};
+module.exports = { createUser, getUser };

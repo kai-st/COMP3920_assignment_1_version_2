@@ -1,21 +1,21 @@
-require('dotenv').config();
+require("dotenv").config();
 const express = require("express");
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const bcrypt = require('bcrypt');
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+const bcrypt = require("bcrypt");
 const saltRounds = 12;
 
-const database = require('./databaseConnection');
-const db_table = require('./database/table');
-const db_users = require('./database/users');
-const db_confirm = require('./database/confirmConnection');
+const database = require("./databaseConnection");
+const db_table = require("./database/table");
+const db_users = require("./database/users");
+const db_confirm = require("./database/confirmConnection");
 db_confirm.printMySQLVersion();
 
 if (process.env.RESET == "reset") {
   db_table.reset_database();
 }
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 const app = express();
 
@@ -33,19 +33,20 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 
 var mongoStore = MongoStore.MongoStore.create({
-	mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@cluster0.afjuq6i.mongodb.net/${mongodb_db_name}`,
-	crypto: {
-		secret: mongodb_session_secret
-	}
-})
+  mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@cluster0.afjuq6i.mongodb.net/${mongodb_db_name}`,
+  crypto: {
+    secret: mongodb_session_secret,
+  },
+});
 
-app.use(session({ 
-  secret: node_session_secret,
-	store: mongoStore,
-	saveUninitialized: false, 
-	resave: true
-}
-));
+app.use(
+  session({
+    secret: node_session_secret,
+    store: mongoStore,
+    saveUninitialized: false,
+    resave: true,
+  }),
+);
 
 function createSession(req, username) {
   req.session.authenticated = true;
@@ -54,19 +55,21 @@ function createSession(req, username) {
 }
 
 function destroySession(req, res) {
-  	req.session.destroy();
-		res.redirect('/');
+  req.session.destroy();
+  res.redirect("/");
 }
 
 function isValidSession(req) {
-	if (req.session.authenticated && req.session.username) {
-		return true;
-	}
-	return false;
+  if (req.session.authenticated && req.session.username) {
+    return true;
+  }
+  return false;
 }
 
 app.get("/", (req, res) => {
-  res.render("home", {username: isValidSession(req) ? req.session.username : null});
+  res.render("home", {
+    username: isValidSession(req) ? req.session.username : null,
+  });
 });
 
 app.get("/signup", (req, res) => {
@@ -78,22 +81,22 @@ app.get("/signup", (req, res) => {
   if (!dbError) {
     dbError = 0;
   }
-  res.render("signup", {missing: missing, error: dbError})
+  res.render("signup", { missing: missing, error: dbError });
 });
 
 app.post("/signup", async (req, res) => {
   const username = req.body.username;
   if (!username) {
-    res.redirect('/signup?missing=1');
+    res.redirect("/signup?missing=1");
   }
   const password = req.body.password;
   if (!password) {
-    res.redirect('/signup?missing=2');
+    res.redirect("/signup?missing=2");
   }
 
   const hashedPassword = bcrypt.hashSync(password, saltRounds);
 
-  const success = await db_users.createUser({username, hashedPassword});
+  const success = await db_users.createUser({ username, hashedPassword });
 
   if (success) {
     createSession(req, username);
@@ -112,51 +115,50 @@ app.get("/login", (req, res) => {
   if (!otherError) {
     otherError = 0;
   }
-  res.render("login", {missing: missing, error: otherError})
+  res.render("login", { missing: missing, error: otherError });
 });
 
 app.post("/login", async (req, res) => {
   const username = req.body.username;
   if (!username) {
-    res.redirect('/login?missing=1');
+    res.redirect("/login?missing=1");
   }
   const password = req.body.password;
   if (!password) {
-    res.redirect('/login?missing=2');
+    res.redirect("/login?missing=2");
   }
 
   const results = await db_users.getUser(username);
 
   if (results) {
-      // if (results.length == 1) {
-          if (bcrypt.compareSync(password, results[0].password)) {
-              createSession(req, username);      
-              res.redirect('/members');
-              return;
-          }
-          else {
-              console.log("invalid password");
-          }
-      // }
-      // else {
-      //     console.log('invalid number of users matched: '+results.length+" (expected 1).");
-      //     res.redirect('/login?error=1');
-      //     return;            
-      // }
+    if (results.length == 1) {
+      if (bcrypt.compareSync(password, results[0].password)) {
+        createSession(req, username);
+        res.redirect("/members");
+        return;
+      } else {
+        console.log("invalid password");
+      }
+    } else {
+      console.log(
+        "invalid number of users matched: " + results.length + " (expected 1).",
+      );
+      res.redirect("/login?error=1");
+      return;
+    }
   }
 
-  console.log('user not found');
+  console.log("user not found");
   res.redirect("/login?error=2");
 });
 
 function sessionValidation(req, res, next) {
-	if (!isValidSession(req)) {
-		destroySession(req, res);
-		return;
-	}
-	else {
-		next();
-	}
+  if (!isValidSession(req)) {
+    destroySession(req, res);
+    return;
+  } else {
+    next();
+  }
 }
 
 app.get("/members", sessionValidation, (req, res) => {
@@ -174,9 +176,9 @@ app.get("/members", sessionValidation, (req, res) => {
       break;
   }
   res.render("members", {
-    username: req.session.username, 
-    imageSource: imageSource
-  })
+    username: req.session.username,
+    imageSource: imageSource,
+  });
 });
 
 app.get("/logout", (req, res) => {
@@ -190,5 +192,5 @@ app.get("/*splat", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("App version 1 listening on port " + port);
+  console.log("App version 2 listening on port " + port);
 });
